@@ -1,13 +1,13 @@
-'use client';
-import * as React from 'react';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { fetchApi } from '@/app/api/request';
-import LaporanNotulen from '@/components/pages/laporan/laporanNotulen';
-import withAuth from '@/components/hocs/withAuth'
-import Swal from 'sweetalert2';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { State } from '@/store/reducer';
+"use client";
+import * as React from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { fetchApi } from "@/app/api/request";
+import LaporanNotulen from "@/components/pages/laporan/laporanNotulen";
+import withAuth from "@/components/hocs/withAuth";
+import Swal from "sweetalert2";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { State } from "@/store/reducer";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,16 +17,16 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
-import dayjs from 'dayjs';
-import { DemoContainer, DemoItem } from '@mui/x-date-pickers/internals/demo';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-import { Line } from 'react-chartjs-2';
-import WelcomeBanner from '@/components/global/Banner/WelcomeBanner';
-import SEO from '@/components/global/seo';
-import { setPayload } from '@/store/payload/action';
+} from "chart.js";
+import dayjs from "dayjs";
+import { DemoContainer, DemoItem } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
+import { Line } from "react-chartjs-2";
+import WelcomeBanner from "@/components/global/Banner/WelcomeBanner";
+import SEO from "@/components/global/seo";
+import { setPayload } from "@/store/payload/action";
 
 ChartJS.register(
   CategoryScale,
@@ -35,7 +35,7 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 function Home() {
@@ -45,25 +45,27 @@ function Home() {
   const [notulenLength, setNotulenLength] = useState<any>([]);
   const [notulensVerifLength, setNotulensVerifLength] = useState<any>([]);
   const [month, setMonth] = useState<any>(null);
-  const [title, setTitle] = useState<string>('');
+  const [title, setTitle] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   const { profile } = useSelector(
     (state: State) => ({
       profile: state.profile.profile,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   useEffect(() => {
     fetchData();
     if (month === null) {
       const currentDate = new Date();
-      const currentShortMonth = currentDate.getMonth() + 1;
-      const currentMonth = currentDate.toLocaleString("id-ID", { month: "long", });
+      //const currentShortMonth = currentDate.getMonth() + 1;
+      const currentMonth = currentDate.toLocaleString("id-ID", {
+        month: "long",
+      });
       const currentYear = currentDate.getFullYear();
 
-      setMonth({ month: currentShortMonth, year: currentYear })
+      setMonth({ month: currentMonth, year: currentYear });
     }
 
     switch (profile.role) {
@@ -71,35 +73,39 @@ function Home() {
         setTitle(`LAPORAN NOTULEN ${new Date().getFullYear()}`);
         break;
       case 2:
-        setTitle(`LAPORAN NOTULEN ${profile.Perangkat_Daerah.nama_opd} ${new Date().getFullYear()}`);
+        setTitle(
+          `LAPORAN NOTULEN ${profile.Perangkat_Daerah.nama_opd} ${new Date().getFullYear()}`,
+        );
         break;
       case 3:
-        setTitle(`LAPORAN NOTULEN ${profile.Perangkat_Daerah.nama_opd} ${new Date().getFullYear()}`);
+        setTitle(
+          `LAPORAN NOTULEN ${profile.Perangkat_Daerah.nama_opd} ${new Date().getFullYear()}`,
+        );
         break;
       case 4:
         setTitle(`LAPORAN NOTULEN ${profile.nama}`);
         break;
       default:
-        setTitle('');
+        setTitle("");
     }
     dispatch(setPayload([]));
   }, [month]);
 
   const fetchData = async () => {
-    setLoading(true)
+    setLoading(true);
     const response = await fetchApi({
-      url: `/notulen/getAllNotulens/${profile.Perangkat_Daerah.kode_opd}`,
+      url: `/notulen/getAllNotulens/${profile.Perangkat_Daerah.kode_opd}/${month.year}`,
       method: "get",
       type: "auth",
-    })
+    });
 
     if (!response.success) {
       setLoading(false);
       Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: 'Koneksi bermasalah!',
-      })
+        icon: "error",
+        title: "Oops...",
+        text: "Koneksi bermasalah!",
+      });
     } else {
       if (response.data.code == 200) {
         const { data } = response.data;
@@ -117,7 +123,7 @@ function Home() {
             data.filter((el: any) => el.Uuid.bulan === "9").length,
             data.filter((el: any) => el.Uuid.bulan === "10").length,
             data.filter((el: any) => el.Uuid.bulan === "11").length,
-            data.filter((el: any) => el.Uuid.bulan === "12").length
+            data.filter((el: any) => el.Uuid.bulan === "12").length,
           ];
           setNotulenLength(temp);
           setNotulens(data);
@@ -134,7 +140,7 @@ function Home() {
             data.data.filter((el: any) => el.Uuid.bulan === "9").length,
             data.data.filter((el: any) => el.Uuid.bulan === "10").length,
             data.data.filter((el: any) => el.Uuid.bulan === "11").length,
-            data.data.filter((el: any) => el.Uuid.bulan === "12").length
+            data.data.filter((el: any) => el.Uuid.bulan === "12").length,
           ];
           let temp2: any = [
             data.verif.filter((el: any) => el.Uuid.bulan === "1").length,
@@ -148,40 +154,53 @@ function Home() {
             data.verif.filter((el: any) => el.Uuid.bulan === "9").length,
             data.verif.filter((el: any) => el.Uuid.bulan === "10").length,
             data.verif.filter((el: any) => el.Uuid.bulan === "11").length,
-            data.verif.filter((el: any) => el.Uuid.bulan === "12").length
+            data.verif.filter((el: any) => el.Uuid.bulan === "12").length,
           ];
           setNotulenLength(temp);
           setNotulens(data.verif);
-          setNotulensVerifLength(temp2)
+          setNotulensVerifLength(temp2);
         }
         setLoading(false);
       }
     }
-  }
+  };
 
   const options = {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: "top" as const,
       },
       title: {
         display: true,
-        text: title
+        text: title,
       },
     },
   };
 
-  const labels = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const labels = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
 
   const data = {
     labels,
     datasets: [
       {
-        label: 'Rekap Notulen',
+        label: "Rekap Notulen",
         data: notulenLength,
-        borderColor: 'rgb(53, 162, 235)',
-        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+        borderColor: "rgb(53, 162, 235)",
+        backgroundColor: "rgba(53, 162, 235, 0.5)",
       },
     ],
   };
@@ -190,42 +209,49 @@ function Home() {
     labels,
     datasets: [
       {
-        label: 'Rekap Notulen',
+        label: "Rekap Notulen",
         data: notulenLength,
-        borderColor: 'rgb(53, 162, 235)',
-        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+        borderColor: "rgb(53, 162, 235)",
+        backgroundColor: "rgba(53, 162, 235, 0.5)",
       },
       {
-        label: 'Verifikasi Notulen',
+        label: "Verifikasi Notulen",
         data: notulensVerifLength,
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        borderColor: "rgb(255, 99, 132)",
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
       },
     ],
   };
 
-  const handleGoToForm = () => router.push('/undangan/tambah?step=1');
+  const handleGoToForm = () => router.push("/undangan/tambah?step=1");
 
   return (
     <div>
       <WelcomeBanner />
       <div
-        className={`absolute right-0 top-[9em] py-2 px-4 rounded-md bg-gradient-to-r from-[#6366f1] from-10% via-[#0ea5e9] via-30% to-[#10b981] to-90% text-white font-bold text-center mb-3 animate-pulse hover:shadow-lg hover:cursor-pointer hover:scale-102 ${profile.role == 1 ? 'hidden' : 'show'}`}
+        className={`absolute right-0 top-[9em] py-2 px-4 rounded-md bg-gradient-to-r from-[#6366f1] from-10% via-[#0ea5e9] via-30% to-[#10b981] to-90% text-white font-bold text-center mb-3 animate-pulse hover:shadow-lg hover:cursor-pointer hover:scale-102 ${profile.role == 1 ? "hidden" : "show"}`}
         onClick={handleGoToForm}
-      >Tambah Undangan & Notulen</div>
-      <div className='bg-white h-[400px] w-full relative flex mt-[5em]'>
-        <div className='w-[68%]'>
+      >
+        Tambah Undangan & Notulen
+      </div>
+      <div className="bg-white h-[400px] w-full relative flex mt-[5em]">
+        <div className="w-[68%]">
           <Line
             options={options}
             data={profile.role == 3 ? dataVerif : data}
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: "100%", height: "100%" }}
           />
         </div>
-        <div className='w-[30%] bg-[#f5f3ed] my-4 hidden md:block'>
+        <div className="w-[30%] bg-[#f5f3ed] my-4 hidden md:block">
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DemoContainer components={['DateCalendar', 'DateCalendar']}>
+            <DemoContainer components={["DateCalendar", "DateCalendar"]}>
               <DemoItem>
-                <DateCalendar value={dayjs(`${new Date().getFullYear()}-0${new Date().getMonth() + 1}-${new Date().getDate()}`)} disabled />
+                <DateCalendar
+                  value={dayjs(
+                    `${new Date().getFullYear()}-0${new Date().getMonth() + 1}-${new Date().getDate()}`,
+                  )}
+                  disabled
+                />
               </DemoItem>
             </DemoContainer>
           </LocalizationProvider>
@@ -233,7 +259,7 @@ function Home() {
       </div>
       <LaporanNotulen data={notulens} loading={loading} profile={profile} />
     </div>
-  )
+  );
 }
 
-export default withAuth(Home)
+export default withAuth(Home);
