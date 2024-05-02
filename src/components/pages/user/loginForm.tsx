@@ -188,42 +188,50 @@ const LoginForm: any = () => {
       password: values.password,
     };
 
-    const response = await fetchApi({
-      url: "/pegawai/login",
-      method: "post",
-      type: "withoutAuth",
-      body: payload,
-    });
-
-    if (!response.success) {
-      console.log(response);
-      router.push("/auth/login");
-      if (response.data.code == 401) {
-        Swal.fire({
-          icon: "error",
-          title: response.data.message,
-        });
-        setLoading(false);
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Koneksi bermasalah",
-        });
-        setLoading(false);
-      }
-      return false;
-    } else if (response.success) {
-      setAuthenticated(true);
-      setActive(true);
-      setCookie("refreshSession", response.data.data.access_token, {
-        maxAge: 900000,
-        path: "/",
-        // secure: true
+    try {
+      const response = await fetchApi({
+        url: "/pegawai/login",
+        method: "post",
+        type: "withoutAuth",
+        body: payload,
       });
-      // router.push("/")
-      getProfile();
-      return true;
+
+      if (!response.success) {
+        router.push("/auth/login");
+        if (response.data.code == 401) {
+          Swal.fire({
+            icon: "error",
+            title: response.data.message,
+          });
+          setLoading(false);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Koneksi bermasalah",
+          });
+          setLoading(false);
+        }
+        return false;
+      } else if (response.success) {
+        setAuthenticated(true);
+        setActive(true);
+        setCookie("refreshSession", response.data.data.access_token, {
+          maxAge: 900000,
+          path: "/",
+          // secure: true
+        });
+        // router.push("/")
+        getProfile();
+        return true;
+      }
+    } catch (err) {
+      setLoading(false);
     }
+    Swal.fire({
+      icon: "error",
+      title: "Terjadi kesalahan",
+      text: "Koneksi bermasalah",
+    });
   };
 
   return (
