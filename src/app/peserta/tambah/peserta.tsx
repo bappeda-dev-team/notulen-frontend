@@ -42,7 +42,7 @@ const PesertaProps = ({ id }: PropTypes) => {
     setData(payload.step1);
     const dateRange = dateRangeFormat(payload.step1?.tanggal !== undefined && payload.step1?.tanggal[0]);
     const temp = dateRange.map((date: any) => ({
-      tanggal: date.split(' ')[0],
+      tanggal: date,
       jumlah_peserta: 0,
       jenis_peserta: '',
     }));
@@ -68,21 +68,23 @@ const PesertaProps = ({ id }: PropTypes) => {
       });
     } else {
       const { data } = response.data;
+
       const updatedState = arr.map((item: any) => {
         const matchingData = data[0].Peserta.find((data: any) => {
-          const date = new Date(data.tanggal).getDate();
-          return date.toString() === item.tanggal;
+          return data.tanggal.split(', ')[1] === item.tanggal;
         });
 
         return matchingData
           ? {
-            tanggal: item.tanggal,
+            tanggal: matchingData.tanggal,
             uuid: matchingData.uuid,
             jumlah_peserta: matchingData.jumlah_peserta,
-            jenis_peserta: matchingData.jenis_peserta
+            jenis_peserta: matchingData.jenis_peserta,
+            penanggungjawab: matchingData.Notification?.Penanggungjawab
           }
           : item;
       });
+
       if (data[0].Peserta.length != 0) setPeserta(updatedState);
       setLoading(false);
       setTrigger(false);
@@ -98,6 +100,8 @@ const PesertaProps = ({ id }: PropTypes) => {
       router.push('/laporan');
     }
   }
+
+  const handleCancel = () => router.push('/laporan');
 
   const gradientStyle = {
     width: '100%',
@@ -136,12 +140,18 @@ const PesertaProps = ({ id }: PropTypes) => {
           )}
           <div className="btn-submit mx-8 flex flex-row justify-between pb-4 mt-10 space-x-3">
             <div className="w-[8em]">
-              <CancelBtn
-                title="Keluar"
-                data={data}
-                url="/undangan/addUndangan"
-                setLoading={setLoading}
-              />
+              <Button
+                type="secondary"
+                variant="xl"
+                className="button-container px-8 py-2"
+                loading={loading}
+                rounded
+                onClick={handleCancel}
+              >
+                <div className="flex gap-2 justify-center items-center text-white font-Nunito">
+                  <span className="button-text text-xl-base">Batal</span>
+                </div>
+              </Button>
             </div>
             <div className="w-[8em]">
               <Button

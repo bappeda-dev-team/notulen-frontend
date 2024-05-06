@@ -1,28 +1,28 @@
 "use client";
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { fetchApi } from "@/app/api/request";
 import Swal from "sweetalert2";
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import LaporanNotulenList from "@/components/pages/notulen/list";
 import { getShortDate, getTime } from "@/components/hooks/formatDate";
 import { ImTable2 } from "react-icons/im";
 import withAuth from "@/components/hocs/withAuth";
 import { shallowEqual, useSelector, useDispatch } from "react-redux";
 import { State } from "@/store/reducer";
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Loading from "@/components/global/Loading/loading";
 import { setPayload } from "@/store/payload/action";
 
-const LaporanNotulenProps = () => {
-  const router = useRouter();
+const NoticeNotulenProps = () => {
+  const pathname = usePathname();
   const dispatch = useDispatch();
   const [notulens, setNotulens] = useState<any>([]);
   const [month, setMonth] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const { profile } = useSelector(
     (state: State) => ({
@@ -53,7 +53,7 @@ const LaporanNotulenProps = () => {
   const fetchData = async () => {
     setLoading(true);
     const response = await fetchApi({
-      url: `/notulen/getAuthNotulen/${profile.Perangkat_Daerah.kode_opd}/${month}`,
+      url: `/notulen/showResponsible/${month}`,
       method: "get",
       type: "auth",
     });
@@ -73,38 +73,25 @@ const LaporanNotulenProps = () => {
         data.map((el: any, i: number) => {
           temp.push({
             id: i + 1,
-            id_notulen: el.id,
-            uuid: el.Uuid.uuid,
-            index: el.id,
-            opd: el.Uuid.Perangkat_Daerah.nama_opd,
-            pembuat: el.Uuid.Pegawai.nama,
-            tagging: el.Uuid.Taggings.length !== 0 ? el.Uuid.Taggings.map((el: any) => el.nama_tagging) : "-",
-            tanggal: el.tanggal[0]?.startDate !== el.tanggal[0]?.endDate
-              ? getShortDate(el.tanggal[0]?.startDate) +
+            id_notulen: el.Notulen.id,
+            index: el.Notulen.id,
+            pelapor: el.Pelapor.nama,
+            tanggal: el.Notulen.tanggal[0]?.startDate !== el.Notulen.tanggal[0]?.endDate
+              ? getShortDate(el.Notulen.tanggal[0]?.startDate) +
               " - " +
-              getShortDate(el.tanggal[0]?.endDate)
-              : getShortDate(el.tanggal[0]?.startDate),
-            waktu: getTime(el.waktu) + " WIB",
-            acara: el.acara,
-            sasaran: el.Uuid.Sasarans.length !== 0 ? el.Uuid.Sasarans.map((data: any) => data.sasaran) : "-",
-            lokasi: el.lokasi,
+              getShortDate(el.Notulen.tanggal[0]?.endDate)
+              : getShortDate(el.Notulen.tanggal[0]?.startDate),
+            waktu: getTime(el.Notulen.waktu) + " WIB",
+            acara: el.Notulen.acara,
+            // sasaran: el.Notulen.Uuid.Sasarans.length !== 0 ? el.Notulen.Uuid.Sasarans.map((data: any) => data.sasaran) : "-",
+            lokasi: el.Notulen.lokasi,
             status: el.status,
-            foto: el.link_img_foto !== null ? "V" : "X",
-            daftarHadir: el.link_img_daftar_hadir !== null ? "V" : "X",
-            undangan: el.link_img_surat_undangan !== null ? "V" : "X",
-            spj: el.link_img_spj !== null ? "V" : "X",
-            lainLain: el.link_img_pendukung !== null ? "V" : "X"
           });
         });
         setNotulens(temp);
         setLoading(false);
       }
     }
-  };
-
-  const gradientStyle = {
-    width: "100%",
-    background: "linear-gradient(to right, #4fd1c5, #4299e1)",
   };
 
   const handleDatePicked = (val: any) => {
@@ -115,20 +102,16 @@ const LaporanNotulenProps = () => {
     setMonth(formattedDate);
   }
 
-  const goToAddNotulen = () => {
-    dispatch(setPayload([]));
-    router.push('/notulen/form');
-  }
+  const gradientStyle = {
+    width: "100%",
+    background: "linear-gradient(to right, #6366f1, #a855f7, #ec4899)",
+  };
 
   return (
     <div>
       <div className="bg-white dark:bg-meta-4 shadow-card flex flex-col gap-2 py-4 text-center font-bold text-title-sm rounded-lg border-none">
-        <div>DAFTAR LAPORAN NOTULEN</div>
-        {profile.role == 1 && <div>PEMERINTAH KOTA MADIUN</div>}
-        {profile.role == 2 || profile.role == 3 ? <div>{profile.Perangkat_Daerah?.nama_opd}</div> : null}
-        {profile.role == 4 && <div className="text-title-xsm2">{profile.nama} <br /> <span>{month}</span></div>}
+        <div>NOTIFIKASI NOTULEN</div>
       </div>
-      {/* <div className='md:w-[30%] w-full md:absolute md:right-0 md:top-[10em] top-[13em] bg-white'> */}
       <div className="flex md:justify-between justify-center">
         <div></div>
         <div className="flex gap-2 mt-10">
@@ -139,12 +122,6 @@ const LaporanNotulenProps = () => {
               </DemoContainer>
             </LocalizationProvider>
           </div>
-          {profile.role == 4 && (
-            <div
-              onClick={goToAddNotulen}
-              className="bg-xl-base px-3 mt-2 flex items-center justify-center text-white hover:bg-[#3b82f6] hover:cursor-pointer duration-300 rounded-sm"
-            >+</div>
-          )}
         </div>
       </div>
       <div style={gradientStyle} className="md:mt-[1em]">
@@ -156,10 +133,14 @@ const LaporanNotulenProps = () => {
       {loading ? (
         <Loading loading={loading} setLoading={setLoading} />
       ) : (
-        <LaporanNotulenList data={notulens} profile={profile} />
+        <LaporanNotulenList
+          data={notulens}
+          profile={profile}
+          pathname={pathname}
+        />
       )}
     </div>
-  );
-};
+  )
+}
 
-export default withAuth(LaporanNotulenProps);
+export default withAuth(NoticeNotulenProps);
