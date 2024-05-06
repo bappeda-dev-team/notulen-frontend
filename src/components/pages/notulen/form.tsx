@@ -1451,7 +1451,6 @@ const AddNotulenForm = ({
   }, []);
 
   const handleSubmit = async (values: FormValues) => {
-    console.log("all values: ", values);
     setLoading(true);
     let uuid;
     if (payload.step1 !== undefined) uuid = payload.step1.uuid;
