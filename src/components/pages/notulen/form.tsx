@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import TextInput from "@/components/common/text-input/input";
 import { Button } from "@/components/common/button/button";
-import SignatureCanvas from "react-signature-canvas";
+import SignatureCanvas from 'react-signature-canvas';
 import dynamic from "next/dynamic";
 import { AiFillPlusCircle } from "react-icons/ai";
-import DateRangePicker from "../laporan/x-modal/XDateRangePicker";
+import DateRangePicker from "./x-modal/XDateRangePicker";
 import { formatDate, getIndoDate } from "@/components/hooks/formatDate";
 import Loading from "@/components/global/Loading/loading";
 import { AiOutlineClose } from "react-icons/ai";
@@ -17,12 +17,14 @@ import * as Yup from "yup";
 import axios from "axios";
 import { getCookies } from "cookies-next";
 import { IoMdClose } from "react-icons/io";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
 import { IoIosSave } from "react-icons/io";
 import Blocks from "editorjs-blocks-react-renderer";
 import { locationList } from "@/components/data/location";
 import { fetchApi } from "@/app/api/request";
+import ModalConfirm from "./x-modal/XConfirm";
 import Swal from "sweetalert2";
+import { localDateFormat } from "@/components/helpers/formatMonth";
 
 const EditorBlock = dynamic(() => import("../../hooks/editor"));
 
@@ -44,6 +46,7 @@ interface FormValues {
   pendukung: any;
   signature: string;
   dibuatTanggal: any;
+  penanggungjawab: any;
   handleSave?: any;
 }
 
@@ -63,12 +66,13 @@ interface OtherProps {
   order?: number;
   notulens?: any;
   type?: string;
+  profile?: any;
 }
 
 interface MyFormProps extends OtherProps {
   handleSubmit: (
     values: FormValues,
-    formikBag: FormikBag<object, FormValues>,
+    formikBag: FormikBag<object, FormValues>
   ) => void;
 }
 
@@ -86,6 +90,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
     index,
     rangeDate,
     notulens,
+    profile,
     type,
     ref,
   } = props;
@@ -99,6 +104,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
   const [openLocation, setOpenLocation] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [sign, setSign] = useState<any>();
+  const [openConfirm, setOpenConfirm] = useState<boolean>(false);
 
   const [uploadMsgUndangan, setUploadMsgUndangan] = useState<string>("");
   const [progressUndangan, setProgressUndangan] = useState<any>({
@@ -132,25 +138,22 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
 
   const handleClear = (e: any) => {
     e.preventDefault();
-    sign.clear();
-  };
+    sign.clear()
+  }
 
   const handleGenerate = (e: any) => {
     e.preventDefault();
     // setSignUrl(sign.getTrimmedCanvas().toDataURL('image/png'));
     handleChange({
-      target: {
-        name: "signature",
-        value: sign.getTrimmedCanvas().toDataURL("image/png"),
-      },
+      target: { name: "signature", value: sign.getTrimmedCanvas().toDataURL('image/png') },
     });
-  };
+  }
 
   const handleDeleteSignature = () => {
     handleChange({
-      target: { name: "signature", value: "" },
+      target: { name: "signature", value: '' },
     });
-  };
+  }
 
   const handleOpenAddPeserta = (e: any) => {
     e.preventDefault();
@@ -158,7 +161,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
 
     if (values.pesertaArray.length)
       setIdPesertaRapat(
-        values.pesertaArray[values.pesertaArray.length - 1].id++,
+        values.pesertaArray[values.pesertaArray.length - 1].id++
       );
     else setIdPesertaRapat(1);
   };
@@ -180,7 +183,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
   const handleDeletePesertaArray = (e: any, nama: string) => {
     e.preventDefault();
     const newArray = values.pesertaArray.filter(
-      (item: any) => item.nama !== nama,
+      (item: any) => item.nama !== nama
     );
     handleChange({
       target: { name: "pesertaArray", value: newArray },
@@ -195,7 +198,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
       });
     }
     setTempat("");
-  };
+  }
 
   const handleDeleteLocation = (e: any) => {
     e.preventDefault();
@@ -203,7 +206,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
     handleChange({
       target: { name: "lokasi", value: "" },
     });
-  };
+  }
 
   const handleUploadSuratUndangan = async (event: any) => {
     let url = `${process.env.BASE_URL}/upload/undangan`;
@@ -237,10 +240,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
 
       setUploadMsgUndangan("Upload berhasil");
       handleChange({
-        target: {
-          name: "suratUndangan",
-          value: { name: fileUrl.name, value: data.data },
-        },
+        target: { name: "suratUndangan", value: { name: fileUrl.name, value: data.data } },
       });
     } else {
       setUploadMsgUndangan("Upload gagal");
@@ -278,10 +278,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
 
       setUploadMsgDaftarHadir("Upload berhasil");
       handleChange({
-        target: {
-          name: "daftarHadir",
-          value: { name: fileUrl.name, value: data.data },
-        },
+        target: { name: "daftarHadir", value: { name: fileUrl.name, value: data.data } },
       });
     } else {
       setUploadMsgUndangan("Upload gagal");
@@ -319,10 +316,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
 
       setUploadMsgSPJ("Upload berhasil");
       handleChange({
-        target: {
-          name: "spj",
-          value: { name: fileUrl.name, value: data.data },
-        },
+        target: { name: "spj", value: { name: fileUrl.name, value: data.data } },
       });
     } else {
       setUploadMsgUndangan("Upload gagal");
@@ -360,10 +354,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
 
       setUploadMsgFoto("Upload berhasil");
       handleChange({
-        target: {
-          name: "foto",
-          value: { name: fileUrl.name, value: data.data },
-        },
+        target: { name: "foto", value: { name: fileUrl.name, value: data.data } },
       });
     } else {
       setUploadMsgFoto("Upload gagal");
@@ -401,10 +392,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
 
       setUploadMsgPendukung("Upload berhasil");
       handleChange({
-        target: {
-          name: "pendukung",
-          value: { name: fileUrl.name, value: data.data },
-        },
+        target: { name: "pendukung", value: { name: fileUrl.name, value: data.data } },
       });
     } else {
       setUploadMsgUndangan("Upload gagal");
@@ -413,7 +401,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
 
   const handleDeleteFile = async (key: string, type: string, e: any) => {
     e.preventDefault();
-    router.push(`${process.env.BASE_URL}/notulen/deleteFile?pathname=${key}`);
+    router.push(`${process.env.BASE_URL}/notulen/deleteFile?pathname=${key}`)
     handleChange({
       target: { name: type, value: null },
     });
@@ -422,15 +410,16 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
     setProgressSPJ({ started: false, pc: 0 });
     setProgressFoto({ started: false, pc: 0 });
     setProgressPendukung({ started: false, pc: 0 });
-    setUploadMsgUndangan("");
-    setUploadMsgDaftarHadir("");
-    setUploadMsgSPJ("");
-    setUploadMsgFoto("");
-    setUploadMsgPendukung("");
+    setUploadMsgUndangan('');
+    setUploadMsgDaftarHadir('');
+    setUploadMsgSPJ('');
+    setUploadMsgFoto('');
+    setUploadMsgPendukung('');
   };
 
-  const handleDownloadFile = async (val: any, e: any) =>
-    router.push(`${process.env.BASE_URL}/notulen/getFile?pathname=${val}`);
+  const handleDownloadFile = async (val: any, e: any) => router.push(`${process.env.BASE_URL}/notulen/getFile?pathname=${val}`);
+
+  const handleCancel = () => router.push('/notulen/laporan');
 
   return (
     <React.Fragment>
@@ -439,20 +428,13 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
       ) : (
         <div className="form-container relative bg-white shadow-card">
           <div className="form-wrapper-general">
-            {step !== null && (
-              <div className="flex items-center justify-center text-center bg-meta-6 font-bold py-2 w-full text-white mt-6">
-                {index !== undefined && rangeDate[index]}
-              </div>
-            )}
+            {step !== null && <div className="flex items-center justify-center text-center bg-meta-6 font-bold py-2 w-full text-white mt-6">{index !== undefined && rangeDate[index]}</div>}
             <div className="px-8 flex flex-col space-y-7 mt-4">
               <div className="data flex flex-row mt-4">
                 {step === null && type === undefined ? (
                   <div
-                    className={`flex border-2 ${
-                      errors.rangeTanggal
-                        ? "border-xl-pink"
-                        : "border-light-gray"
-                    } rounded-lg w-full py-3 px-4`}
+                    className={`flex border-2 ${errors.rangeTanggal ? "border-xl-pink" : "border-light-gray"
+                      } rounded-lg w-full py-3 px-4`}
                     onClick={() => step === null && setOpenDateRange(true)}
                   >
                     {values?.rangeTanggal[0]?.startDate === null ? (
@@ -466,7 +448,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                         )}
                         {values?.rangeTanggal[0]?.endDate !== null &&
                           values?.rangeTanggal[0]?.endDate !==
-                            values?.rangeTanggal[0]?.startDate && (
+                          values?.rangeTanggal[0]?.startDate && (
                             <span>
                               {" "}
                               - {formatDate(values.rangeTanggal[0]?.endDate)}
@@ -485,7 +467,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                       )}
                       {values?.rangeTanggal[0]?.endDate !== null &&
                         values?.rangeTanggal[0]?.endDate !==
-                          values?.rangeTanggal[0]?.startDate && (
+                        values?.rangeTanggal[0]?.startDate && (
                           <span>
                             {" "}
                             - {formatDate(values.rangeTanggal[0]?.endDate)}
@@ -526,9 +508,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                   errors={errors.acara}
                 />
               </div>
-              <div className="mt-2 -pb-2 text-title-xsm font-bold">
-                Penjelasan :
-              </div>
+              <div className="mt-2 -pb-2 text-title-xsm font-bold">Penjelasan :</div>
               <div>
                 <div className="text-deep-gray">Pendahuluan</div>
                 {step === null && type === undefined ? (
@@ -548,30 +528,24 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                 ) : (
                   <div className="md:mt-0 mt-2 w-full">
                     <div className="border-2 border-light-gray rounded-lg w-full py-3 px-4">
-                      {values.pendahuluan !== null && (
-                        <Blocks
-                          data={values.pendahuluan}
-                          config={{
-                            list: {
-                              className: "list-decimal ml-10",
-                            },
-                            paragraph: {
-                              className: "text-base text-opacity-75",
-                              actionsClassNames: {
-                                alignment: "text-justify",
-                              },
-                            },
-                          }}
-                        />
-                      )}
+                      {values.pendahuluan !== null && <Blocks data={values.pendahuluan} config={{
+                        list: {
+                          className: "list-decimal ml-10"
+                        },
+                        paragraph: {
+                          className: "text-base text-opacity-75",
+                          actionsClassNames: {
+                            alignment: "text-justify",
+                          }
+                        }
+                      }} />}
                     </div>
                   </div>
                 )}
               </div>
               <div className="flex flex-col justify-center mb-2">
                 {step !== null ? (
-                  index !== undefined &&
-                  notulens[index].uuid === undefined && (
+                  index !== undefined && notulens[index].uuid === undefined && (
                     <div>
                       <div className="flex gap-2">
                         <button onClick={(e) => handleOpenAddPeserta(e)}>
@@ -635,8 +609,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                 )}
                 <ul className="mt-4 ml-4">
                   {step !== null ? (
-                    index !== undefined &&
-                    notulens[index].uuid !== undefined && (
+                    index !== undefined && notulens[index].uuid !== undefined && (
                       <div className="mb-6">Peserta :</div>
                     )
                   ) : (
@@ -647,19 +620,15 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                       <div className="flex justify-between">
                         <div className="flex gap-2">
                           <div
-                            className={`${
-                              values.pesertaArray.length > 1
-                                ? "block"
-                                : "hidden"
-                            }`}
+                            className={`${values.pesertaArray.length > 1 ? "block" : "hidden"
+                              }`}
                           >
                             {i + 1} .
                           </div>
                           <div>{el.nama}</div>
                         </div>
                         {step !== null ? (
-                          index !== undefined &&
-                          notulens[index].uuid === undefined && (
+                          index !== undefined && notulens[index].uuid === undefined && (
                             <div>
                               <button
                                 onClick={(e: any) =>
@@ -692,22 +661,17 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                     <div className="mb-4">Isi Rapat :</div>
                     <div className="md:mt-0 mt-2 w-full">
                       <div className="border-2 border-light-gray rounded-lg w-full py-3 px-4">
-                        {values.isiRapat !== null && (
-                          <Blocks
-                            data={values.isiRapat}
-                            config={{
-                              list: {
-                                className: "list-decimal ml-10",
-                              },
-                              paragraph: {
-                                className: "text-base text-opacity-75",
-                                actionsClassNames: {
-                                  alignment: "text-justify",
-                                },
-                              },
-                            }}
-                          />
-                        )}
+                        {values.isiRapat !== null && <Blocks data={values.isiRapat} config={{
+                          list: {
+                            className: "list-decimal ml-10"
+                          },
+                          paragraph: {
+                            className: "text-base text-opacity-75",
+                            actionsClassNames: {
+                              alignment: "text-justify",
+                            }
+                          }
+                        }} />}
                       </div>
                     </div>
                   </div>
@@ -733,22 +697,17 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                 {index !== undefined && notulens[index].uuid !== undefined ? (
                   <div className="md:mt-0 mt-2 w-full">
                     <div className="border-2 border-light-gray rounded-lg w-full py-3 px-4">
-                      {values.tindakLanjut !== null && (
-                        <Blocks
-                          data={values.tindakLanjut}
-                          config={{
-                            list: {
-                              className: "list-decimal ml-10",
-                            },
-                            paragraph: {
-                              className: "text-base text-opacity-75",
-                              actionsClassNames: {
-                                alignment: "text-justify",
-                              },
-                            },
-                          }}
-                        />
-                      )}
+                      {values.tindakLanjut !== null && <Blocks data={values.tindakLanjut} config={{
+                        list: {
+                          className: "list-decimal ml-10"
+                        },
+                        paragraph: {
+                          className: "text-base text-opacity-75",
+                          actionsClassNames: {
+                            alignment: "text-justify",
+                          }
+                        }
+                      }} />}
                     </div>
                   </div>
                 ) : (
@@ -781,17 +740,14 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                       handleBlur={handleBlur}
                       setValueSelected={handleChange}
                       change={(selectedOption: any) => {
-                        if (selectedOption.value === "others") {
+                        if (selectedOption.value === 'others') {
                           setOpenLocation(true);
                           handleChange({
-                            target: { name: "lokasi", value: "" },
+                            target: { name: 'lokasi', value: '' }
                           });
                         } else {
                           handleChange({
-                            target: {
-                              name: "lokasi",
-                              value: selectedOption.value,
-                            },
+                            target: { name: 'lokasi', value: selectedOption.value }
                           });
                         }
                       }}
@@ -800,17 +756,17 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                     <div className="flex w-full items-center justify-between">
                       <div className="flex flex-col">
                         <div className="mb-1">Tempat : </div>
-                        {values.lokasi.split(", ").map((el: any, i: number) => (
+                        {values.lokasi.split(', ').map((el: any, i: number) => (
                           <div>{el}</div>
                         ))}
                       </div>
-                      {step === null && type === undefined && (
-                        <div>
-                          <button onClick={handleDeleteLocation}>
-                            <AiOutlineClose size={18} />
-                          </button>
-                        </div>
-                      )}
+                      {step === null && type === undefined && <div>
+                        <button
+                          onClick={handleDeleteLocation}
+                        >
+                          <AiOutlineClose size={18} />
+                        </button>
+                      </div>}
                     </div>
                   )
                 ) : (
@@ -828,10 +784,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                           handleBlur={handleBlur}
                           errors={errors.lokasi}
                         />
-                        <div className="mt-1">
-                          * Untuk mengisi nama tempat dan alamat, harap
-                          dipisahkan dengan koma dan spasi (, )
-                        </div>
+                        <div className="mt-1">* Untuk mengisi nama tempat dan alamat, harap dipisahkan dengan koma dan spasi (, )</div>
                         <div className="flex justify-center items-center md:gap-8 md:mx-10 mt-3">
                           <button
                             className="text-xl-pink"
@@ -851,19 +804,17 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                       <div className="flex w-full items-center justify-between">
                         <div className="flex flex-col">
                           <div className="mb-1">Tempat : </div>
-                          {values.lokasi
-                            .split(", ")
-                            .map((el: any, i: number) => (
-                              <div>{el}</div>
-                            ))}
+                          {values.lokasi.split(', ').map((el: any, i: number) => (
+                            <div>{el}</div>
+                          ))}
                         </div>
-                        {step === null && type === undefined && (
-                          <div>
-                            <button onClick={handleDeleteLocation}>
-                              <AiOutlineClose size={18} />
-                            </button>
-                          </div>
-                        )}
+                        {step === null && type === undefined && <div>
+                          <button
+                            onClick={handleDeleteLocation}
+                          >
+                            <AiOutlineClose size={18} />
+                          </button>
+                        </div>}
                       </div>
                     )}
                   </div>
@@ -919,8 +870,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                         <span>{values.dibuatTanggal}</span>
                       </div>
                     </div>
-                    {index !== undefined &&
-                    notulens[index].uuid === undefined ? (
+                    {step === null && index !== undefined && notulens[index].uuid === undefined ? (
                       <div className="data flex flex-row w-full">
                         <div className="flex flex-col gap-2">
                           <div>Edit tanggal pembuatan notulen :</div>
@@ -932,19 +882,14 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                             touched={touched.dibuatTanggal}
                             change={(e: any) => {
                               handleChange({
-                                target: {
-                                  name: "dibuatTanggal",
-                                  value: getIndoDate(e.$d),
-                                },
+                                target: { name: "dibuatTanggal", value: getIndoDate(e.$d) },
                               });
                             }}
                             errors={errors.dibuatTanggal}
                           />
                         </div>
                       </div>
-                    ) : (
-                      <div className="w-full"></div>
-                    )}
+                    ) : <div className="w-full flex justify-start"></div>}
                   </div>
                 </div>
               )}
@@ -962,10 +907,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                   />
                   <div className="w-full">
                     {progressUndangan.started && (
-                      <progress
-                        max="100"
-                        value={progressUndangan.pc}
-                      ></progress>
+                      <progress max="100" value={progressUndangan.pc}></progress>
                     )}
                   </div>
                   {uploadMsgUndangan && <span>{uploadMsgUndangan}</span>}
@@ -974,24 +916,11 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col gap-2">
                     <div>Surat Undangan</div>
-                    <div
-                      className="download-click text-xl-base"
-                      onClick={(e: any) =>
-                        handleDownloadFile(values.suratUndangan.value, e)
-                      }
-                    >
+                    <div className="download-click text-xl-base" onClick={(e: any) => handleDownloadFile(values.suratUndangan.value, e)}>
                       {values.suratUndangan.name}
                     </div>
                   </div>
-                  <div
-                    onClick={(e: any) =>
-                      handleDeleteFile(
-                        values.suratUndangan.value,
-                        "suratUndangan",
-                        e,
-                      )
-                    }
-                  >
+                  <div onClick={(e: any) => handleDeleteFile(values.suratUndangan.value, 'suratUndangan', e)}>
                     <IoMdClose size={20} />
                   </div>
                 </div>
@@ -1022,24 +951,11 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col gap-2">
                     <div>Daftar Hadir</div>
-                    <div
-                      className="download-click text-xl-base"
-                      onClick={(e: any) =>
-                        handleDownloadFile(values.daftarHadir.value, e)
-                      }
-                    >
+                    <div className="download-click text-xl-base" onClick={(e: any) => handleDownloadFile(values.daftarHadir.value, e)}>
                       {values.daftarHadir.name}
                     </div>
                   </div>
-                  <div
-                    onClick={(e: any) =>
-                      handleDeleteFile(
-                        values.daftarHadir.value,
-                        "daftarHadir",
-                        e,
-                      )
-                    }
-                  >
+                  <div onClick={(e: any) => handleDeleteFile(values.daftarHadir.value, 'daftarHadir', e)}>
                     <IoMdClose size={20} />
                   </div>
                 </div>
@@ -1067,20 +983,11 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col gap-2">
                     <div>SPJ</div>
-                    <div
-                      className="download-click text-xl-base"
-                      onClick={(e: any) =>
-                        handleDownloadFile(values.spj.value, e)
-                      }
-                    >
+                    <div className="download-click text-xl-base" onClick={(e: any) => handleDownloadFile(values.spj.value, e)}>
                       {values.spj.name}
                     </div>
                   </div>
-                  <div
-                    onClick={(e: any) =>
-                      handleDeleteFile(values.spj.value, "spj", e)
-                    }
-                  >
+                  <div onClick={(e: any) => handleDeleteFile(values.spj.value, 'spj', e)}>
                     <IoMdClose size={20} />
                   </div>
                 </div>
@@ -1108,20 +1015,11 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col gap-2">
                     <div>Foto</div>
-                    <div
-                      className="download-click text-xl-base"
-                      onClick={(e: any) =>
-                        handleDownloadFile(values.foto.value, e)
-                      }
-                    >
+                    <div className="download-click text-xl-base" onClick={(e: any) => handleDownloadFile(values.foto.value, e)}>
                       {values.foto.name}
                     </div>
                   </div>
-                  <div
-                    onClick={(e: any) =>
-                      handleDeleteFile(values.foto.value, "foto", e)
-                    }
-                  >
+                  <div onClick={(e: any) => handleDeleteFile(values.foto.value, 'foto', e)}>
                     <IoMdClose size={20} />
                   </div>
                 </div>
@@ -1140,10 +1038,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                   />
                   <div className="w-full">
                     {progressPendukung.started && (
-                      <progress
-                        max="100"
-                        value={progressPendukung.pc}
-                      ></progress>
+                      <progress max="100" value={progressPendukung.pc}></progress>
                     )}
                   </div>
                   {uploadMsgPendukung && <span>{uploadMsgPendukung}</span>}
@@ -1152,79 +1047,38 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col gap-2">
                     <div>File Pendukung</div>
-                    <div
-                      className="download-click text-xl-base"
-                      onClick={(e: any) =>
-                        handleDownloadFile(values.pendukung.value, e)
-                      }
-                    >
+                    <div className="download-click text-xl-base" onClick={(e: any) => handleDownloadFile(values.pendukung.value, e)}>
                       {values.pendukung.name}
                     </div>
                   </div>
-                  <div
-                    onClick={(e: any) =>
-                      handleDeleteFile(values.pendukung.value, "pendukung", e)
-                    }
-                  >
+                  <div onClick={(e: any) => handleDeleteFile(values.pendukung.value, 'pendukung', e)}>
                     <IoMdClose size={20} />
                   </div>
                 </div>
               )}
             </div>
-            <div className="signature px-8 mt-6">
-              {values.signature === null ? (
-                <>
-                  <div className="text-title-xsm2 mb-2">
-                    Bubuhkan Tanda tangan (opsional)
-                  </div>
-                  <div className="md:w-[500px] w-full md:h-[200px] h-[130px] border-2 border-light-gray rounded rounded-lg">
-                    <SignatureCanvas
-                      canvasProps={{
-                        width: 500,
-                        height: 200,
-                        className: "sigCanvas",
-                      }}
-                      ref={(data: any) => setSign(data)}
-                    />
-                  </div>
-                  <button
-                    style={{ height: "30px", width: "200px" }}
-                    className="text-meta-1"
-                    onClick={(e: any) => handleClear(e)}
-                  >
-                    BERSIHKAN
-                  </button>
-                  <button
-                    style={{ height: "30px", width: "200px" }}
-                    className="text-xl-base font-bold"
-                    onClick={(e: any) => handleGenerate(e)}
-                  >
-                    SIMPAN
-                  </button>
-                </>
+            <div className="mt-8 ml-8 flex flex-col gap-2 text-black">
+              <div>Penanggungjawab</div>
+              <div><img src={values.signature} /></div>
+              {values.penanggungjawab !== null ? (
+                <div className="flex flex-col">
+                  <div>{values.penanggungjawab?.nama}</div>
+                  <div>{values.penanggungjawab?.nip}</div>
+                </div>
               ) : (
-                <div className="flex md:flex-row md:items-center md:justify-between flex-col mb-2 md:mb-0">
-                  <img src={values.signature} />
-                  {index !== undefined &&
-                    notulens[index].uuid === undefined && (
-                      <div
-                        className="text-danger text-title-xsm2 hover:cursor-pointer"
-                        onClick={handleDeleteSignature}
-                      >
-                        Hapus
-                      </div>
-                    )}
+                <div className="flex flex-col">
+                  <div>{profile?.nama}</div>
+                  <div>{profile?.nip}</div>
                 </div>
               )}
             </div>
-            <div className="text-danger text-title-ss mx-8 mt-3">
-              *Pastikan mengisi seluruh data notulen, (kecuali yang opsional)
-            </div>
+            {index !== undefined && notulens[index].uuid === undefined && (
+              <div className="text-danger text-title-ss mx-8 mt-5">*Pastikan mengisi seluruh data notulen, (kecuali yang opsional)</div>
+            )}
 
-            <div className="btn-submit mx-8 flex flex-row justify-between pb-4 mt-4 space-x-3">
+            <div className="btn-submit mx-8 flex flex-row justify-between pb-4 mt-8 space-x-3">
               {step !== null ? (
-                index !== undefined &&
-                notulens[index].uuid === undefined && (
+                index !== undefined && notulens[index].uuid === undefined && (
                   <div className="w-[8em] absolute bottom-6 right-8">
                     <Button
                       type="button"
@@ -1233,24 +1087,21 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                       loading={loading}
                       disabled={
                         values.rangeTanggal.length == 0 ||
-                        values.jam === null ||
-                        values.pendahuluan === "" ||
-                        values.pesertaArray.length == 0 ||
-                        values.isiRapat === null ||
-                        values.tindakLanjut === null ||
-                        values.lokasi === "" ||
-                        values.acara === "" ||
-                        values.atasan === null ||
-                        values.dibuatTanggal === null
-                          ? true
-                          : false
+                          values.jam === null ||
+                          values.pendahuluan === "" ||
+                          values.pesertaArray.length == 0 ||
+                          values.isiRapat === null ||
+                          values.tindakLanjut === null ||
+                          values.lokasi === "" ||
+                          values.acara === "" ||
+                          values.atasan === null ||
+                          values.dibuatTanggal === null ?
+                          true : false
                       }
-                      onClick={handleSubmit}
+                      onClick={() => setOpenConfirm(true)}
                     >
                       <div className="flex gap-2 justify-center items-center text-white font-Nunito">
-                        <div>
-                          <IoIosSave size={20} />
-                        </div>
+                        <div><IoIosSave size={20} /></div>
                         <span className="button-text">Simpan</span>
                       </div>
                     </Button>
@@ -1259,18 +1110,18 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
               ) : (
                 <div className="flex items-center justify-between w-full mt-6">
                   <div>
-                    {/* <Button
+                    <Button
                       type="secondary"
                       variant="xl"
                       className="button-container px-8 py-2"
                       loading={loading}
                       rounded
-                    onClick={handleCancel}
+                      onClick={handleCancel}
                     >
                       <div className="flex gap-2 justify-center items-center text-white font-Nunito">
                         <span className="button-text text-xl-base">Batal</span>
                       </div>
-                    </Button> */}
+                    </Button>
                   </div>
                   <div>
                     <Button
@@ -1281,19 +1132,18 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
                       rounded
                       disabled={
                         values.rangeTanggal.length == 0 ||
-                        values.jam === null ||
-                        values.pendahuluan === "" ||
-                        values.pesertaArray.length == 0 ||
-                        values.isiRapat === null ||
-                        values.tindakLanjut === null ||
-                        values.lokasi === "" ||
-                        values.acara === "" ||
-                        values.atasan === null ||
-                        values.dibuatTanggal === null
-                          ? true
-                          : false
+                          values.jam === null ||
+                          values.pendahuluan === "" ||
+                          values.pesertaArray.length == 0 ||
+                          values.isiRapat === null ||
+                          values.tindakLanjut === null ||
+                          values.lokasi === "" ||
+                          values.acara === "" ||
+                          values.atasan === null ||
+                          values.dibuatTanggal === null ?
+                          true : false
                       }
-                      onClick={handleSubmit}
+                      onClick={() => setOpenConfirm(true)}
                     >
                       <div className="flex gap-2 justify-center items-center text-white font-Nunito">
                         <span className="button-text">Submit</span>
@@ -1305,6 +1155,16 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
             </div>
           </div>
 
+          <ModalConfirm
+            openConfirm={openConfirm}
+            setOpenConfirm={setOpenConfirm}
+            values={values}
+            handleChange={handleChange}
+            handleSubmit={handleSubmit}
+            notulens={notulens}
+            index={index}
+            profile={profile}
+          />
           <DateRangePicker
             isOpen={openDateRange}
             setIsOpen={setOpenDateRange}
@@ -1321,75 +1181,52 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
   );
 };
 
-function CreateForm({
-  handleSubmit,
-  order,
-  payload,
-  tanggal,
-  dibuatTanggal,
-  ...otherProps
-}: MyFormProps) {
+function CreateForm({ handleSubmit, order, payload, tanggal, dibuatTanggal, ...otherProps }: MyFormProps) {
   const FormWithFormik = withFormik({
     mapPropsToValues: () => ({
       tagging: [],
       rangeTanggal: [
         {
-          startDate:
-            tanggal.length != 0 && order !== undefined
-              ? payload.length != 0
-                ? tanggal[order].startDate
-                : tanggal[0]?.startDate
-              : null,
-          endDate:
-            tanggal.length != 0 && order !== undefined
-              ? payload.length != 0
-                ? tanggal[order].endDate
-                : tanggal[0]?.endDate
-              : null,
+          startDate: tanggal.length != 0 && order !== undefined ? payload.length != 0 ? tanggal[order].startDate : tanggal[0]?.startDate : null,
+          endDate: tanggal.length != 0 && order !== undefined ? payload.length != 0 ? tanggal[order].endDate : tanggal[0]?.endDate : null,
           key: "selection",
         },
       ],
       jam: payload.length != 0 ? payload.waktu : null,
-      pendahuluan:
-        payload.length != 0
-          ? payload.pendahuluan !== null
-            ? JSON.parse(payload.pendahuluan)
-            : null
-          : null,
+      pendahuluan: payload.length != 0 ? payload.pendahuluan !== null ? JSON.parse(payload.pendahuluan) : null : null,
       pesertaArray: payload.length != 0 ? payload.peserta_rapat : [],
-      isiRapat:
-        payload.length != 0
-          ? payload.isi_rapat !== null
-            ? JSON.parse(payload?.isi_rapat)
-            : null
-          : null,
-      tindakLanjut:
-        payload.length != 0
-          ? payload.tindak_lanjut !== null
-            ? JSON.parse(payload.tindak_lanjut)
-            : null
-          : null,
-      lokasi: payload.length != 0 ? payload.lokasi : "",
-      acara: payload.length != 0 ? payload.acara : "",
+      isiRapat: payload.length != 0 ? payload.isi_rapat !== null ? JSON.parse(payload?.isi_rapat) : null : null,
+      tindakLanjut: payload.length != 0 ? payload.tindak_lanjut !== null ? JSON.parse(payload.tindak_lanjut) : null : null,
+      lokasi: payload.length != 0 ? payload.lokasi : '',
+      acara: payload.length != 0 ? payload.acara : '',
       atasan: payload.length != 0 ? payload.atasan : null,
-      suratUndangan:
-        payload.length != 0 ? payload.link_img_surat_undangan : null,
+      suratUndangan: payload.length != 0 ? payload.link_img_surat_undangan : null,
       daftarHadir: payload.length != 0 ? payload.link_img_daftar_hadir : null,
       spj: payload.length != 0 ? payload.link_img_spj : null,
       foto: payload.length != 0 ? payload.link_img_foto : null,
       pendukung: payload.length != 0 ? payload.link_img_pendukung : null,
       signature: payload.length != 0 ? payload.signature : null,
       dibuatTanggal: payload.length != 0 ? dibuatTanggal : null,
+      penanggungjawab: payload.length != 0 ? payload.Notification !== null ? payload.Notification?.Penanggungjawab : null : null
     }),
     validationSchema: Yup.object().shape({
-      rangeTanggal: Yup.array().required("Harap isi tanggal pelaksanaan !"),
-      jam: Yup.mixed().nullable().required("Waktu tidak boleh kosong !"),
-      pendahuluan: Yup.mixed().required("Harap isi pendahuluan !"),
-      pesertaArray: Yup.array().required("Harap isi peserta !"),
-      isiRapat: Yup.mixed().required("Harap isi rapat !"),
-      tindakLanjut: Yup.mixed().required("Harap isi tindak lanjut !"),
-      lokasi: Yup.string().required("Lokasi tidak boleh kosong !"),
-      acara: Yup.string().required("Acara tidak boleh kosong !"),
+      rangeTanggal: Yup.array()
+        .required("Harap isi tanggal pelaksanaan !"),
+      jam: Yup.mixed()
+        .nullable()
+        .required("Waktu tidak boleh kosong !"),
+      pendahuluan: Yup.mixed()
+        .required("Harap isi pendahuluan !"),
+      pesertaArray: Yup.array()
+        .required("Harap isi peserta !"),
+      isiRapat: Yup.mixed()
+        .required("Harap isi rapat !"),
+      tindakLanjut: Yup.mixed()
+        .required("Harap isi tindak lanjut !"),
+      lokasi: Yup.string()
+        .required("Lokasi tidak boleh kosong !"),
+      acara: Yup.string()
+        .required("Acara tidak boleh kosong !"),
       atasan: Yup.object()
         .shape({
           label: Yup.string(),
@@ -1397,9 +1234,7 @@ function CreateForm({
         })
         .required("Bagian dibutuhkan")
         .nullable(),
-      dibuatTanggal: Yup.mixed()
-        .nullable()
-        .required("Tanggal tidak boleh kosong !"),
+      dibuatTanggal: Yup.mixed().nullable().required("Tanggal tidak boleh kosong !"),
     }),
     handleSubmit,
   })(FormField);
@@ -1434,7 +1269,7 @@ const AddNotulenForm = ({
   dataAtasan,
   setLoading,
   setTrigger,
-  type,
+  type
 }: PropTypes) => {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -1447,8 +1282,21 @@ const AddNotulenForm = ({
         setDibuatTanggal(notulen.tanggal_surat);
       }
     }
-    if (index !== undefined) setSudenly(index);
+    if (index !== undefined) setSudenly(index)
   }, []);
+
+  const getDay = (dateString: string) => {
+    var dateParts = dateString?.split(" ");
+    var day = parseInt(dateParts[0]);
+    var month = dateParts[1];
+    var year = parseInt(dateParts[2]);
+    var date = new Date(year, ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"].indexOf(month), day);
+    var days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    var dayName = days[date.getDay()];
+    var formattedDate = dayName + ", " + dateString;
+
+    return formattedDate;
+  }
 
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
@@ -1468,24 +1316,25 @@ const AddNotulenForm = ({
       lokasi: values.lokasi,
       acara: values.acara,
       atasan: values.atasan?.data,
-      status: "-",
-      tanggal_surat: values.dibuatTanggal,
+      status: values.dibuatTanggal > new Date() ? 'drafted' : '-',
+      tanggal_surat: payload.step1 !== undefined ? getDay(localDateFormat(values.dibuatTanggal)) : getDay(values.dibuatTanggal),
       link_img_surat_undangan: values.suratUndangan,
       link_img_daftar_hadir: values.daftarHadir,
       link_img_spj: values.spj,
       link_img_foto: values.foto,
       link_img_pendukung: values.pendukung,
-      signature: values.signature !== "" ? values.signature : "-",
+      signature: values.signature !== '' ? values.signature : '-',
       kode_opd: profile.Perangkat_Daerah.kode_opd,
       nip_pegawai: profile.nip,
       nip_atasan: values.atasan.value,
+      nip_penanggungjawab_notulen: values.dibuatTanggal > new Date() ? null : values.penanggungjawab !== null ? values.penanggungjawab.nip : null
     };
 
     const response = await fetchApi({
       url: `/notulen/addNotulen`,
       method: "post",
       type: "auth",
-      body: dataNotulen,
+      body: dataNotulen
     });
 
     if (!response.success) {
@@ -1505,7 +1354,6 @@ const AddNotulenForm = ({
         });
       }
     } else {
-      setLoading(false);
       Swal.fire({
         position: "center",
         icon: "success",
@@ -1518,98 +1366,13 @@ const AddNotulenForm = ({
         setTrigger(true);
       } else {
         if (type !== undefined) {
-          router.push("/laporan");
+          router.push('/laporan');
         } else {
-          router.push("/notulen/laporan");
+          router.push('/notulen/laporan');
         }
       }
     }
-
-    // if (!response.success) {
-    // if (response.data.code == 400) {
-    //   setLoading(false);
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Oops...",
-    //     text: "Periksa kembali data Notulen!",
-    //   });
-    // } else if (response.data.code == 500) {
-    //   setLoading(false);
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Oops...",
-    //     text: "Koneksi bermasalah!",
-    //   });
-    // }
-    // } else {
-    //   if (step !== null) {
-    //     const response2 = await fetchApi({
-    //       url: '/undangan/addUndangan',
-    //       method: 'post',
-    //       type: 'auth',
-    //       body: payload.step1
-    //     })
-
-    //     if (!response2.success) {
-    //       if (response2.data.code == 400) {
-    //         setLoading(false);
-    //         Swal.fire({
-    //           icon: "error",
-    //           title: "Oops...",
-    //           text: "Periksa kembali data Undangan!",
-    //         });
-    //       } else if (response2.data.code == 500) {
-    //         setLoading(false);
-    //         Swal.fire({
-    //           icon: "error",
-    //           title: "Oops...",
-    //           text: "Koneksi bermasalah!",
-    //         });
-    //       }
-    //     } else {
-    //       const { data } = response2.data;
-
-    //       const response3 = await fetchApi({
-    //         url: `/undangan/addJumlahPeserta/${data.id}`,
-    //         method: 'post',
-    //         type: 'auth',
-    //         body: payload.step2
-    //       })
-    //       console.log(response3, 'response');
-
-    //       if (!response3.success) {
-    //         setLoading(false);
-    //         Swal.fire({
-    //           icon: "error",
-    //           title: "Oops...",
-    //           text: "Periksa kembali data peserta!",
-    //         });
-    //       } else {
-    // Swal.fire({
-    //   position: "center",
-    //   icon: "success",
-    //   title: "Berhasil menambahkan notulen",
-    //   showConfirmButton: false,
-    //   timer: 1500,
-    // });
-    // dispatch(setPayload([]));
-    // router.push("/notulen/laporan");
-    //       }
-    //     }
-    //   } else {
-    //     Swal.fire({
-    //       position: "center",
-    //       icon: "success",
-    //       title: "Berhasil menambahkan notulen",
-    //       showConfirmButton: false,
-    //       timer: 1500,
-    //     });
-    //     dispatch(setPayload([]));
-    //     router.push("/notulen/laporan");
-    //   }
-    // }
   };
-  // console.log(notulens, 'mombai');
 
   return (
     <div>
@@ -1627,6 +1390,7 @@ const AddNotulenForm = ({
             notulens={notulens}
             dibuatTanggal={dibuatTanggal}
             dataAtasan={dataAtasan}
+            profile={profile}
           />
         )
       ) : (
@@ -1643,6 +1407,7 @@ const AddNotulenForm = ({
           dibuatTanggal={dibuatTanggal}
           dataAtasan={dataAtasan}
           type={type}
+          profile={profile}
         />
       )}
     </div>
@@ -1650,3 +1415,4 @@ const AddNotulenForm = ({
 };
 
 export default AddNotulenForm;
+
