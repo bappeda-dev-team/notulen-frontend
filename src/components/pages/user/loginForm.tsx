@@ -135,7 +135,7 @@ const LoginForm: any = () => {
   const getProfile = async () => {
     const token = getCookie("refreshSession");
     if (typeof token !== "undefined") {
-      const resUser = await fetchApi({
+      const resUser: any = await fetchApi({
         url: "/pegawai/getProfile",
         method: "get",
         type: "auth"
@@ -217,7 +217,7 @@ const LoginForm: any = () => {
     } else {
       setAuthenticated(true);
       setActive(true);
-      setCookie("refreshSession", response.data.data.access_token, {
+      setCookie("refreshSession", response.data.data.accessToken, {
         maxAge: 900000,
         path: "/",
         // secure: true
