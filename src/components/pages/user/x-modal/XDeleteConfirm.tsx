@@ -1,19 +1,19 @@
-import * as React from 'react';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSelector, shallowEqual } from 'react-redux';
-import { CommonModal } from '@/components/common/common-modal/modal';
-import { Button } from '@/components/common/button/button';
-import { fetchApi } from '@/app/api/request';
-import TextInput from '@/components/common/text-input/input';
-import Swal from 'sweetalert2';
+import * as React from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSelector, shallowEqual } from "react-redux";
+import { CommonModal } from "@/components/common/common-modal/modal";
+import { Button } from "@/components/common/button/button";
+import { fetchApi } from "@/app/api/request";
+import TextInput from "@/components/common/text-input/input";
+import Swal from "sweetalert2";
 import Select from "react-select";
-import { State } from '@/store/reducer';
-import { GrClose } from 'react-icons/gr';
+import { State } from "@/store/reducer";
+import { GrClose } from "react-icons/gr";
 
 interface PropTypes {
-  openConfirmDelete: boolean,
-  setXConfirmDelete: any,
+  openConfirmDelete: boolean;
+  setXConfirmDelete: any;
   user: any;
 }
 
@@ -28,14 +28,19 @@ const XDeleteConfirm = ({
 
   const onClose = () => setXConfirmDelete(false);
 
-  const handleDelete = () => { }
+  const handleDelete = () => {};
 
   return (
-    <CommonModal isOpen={openConfirmDelete} onClose={setXConfirmDelete} animate={true}>
-      <div className='flex flex-col w-full py-3'>
-        <div className='relative'>
-          <div className='text-center font-medium text-title-xsm'>Apakah Anda Yakin Hapus Data Pegawai ?</div>
-          <div className='text-center font-medium md:text-xsm text-xsm2 mt-6 mb-4 text-danger'>Menghapus data pegawai dapat mengakibatkan data notulen yang dibuat oleh {user.nama} akan hilang !</div>
+    <CommonModal isOpen={openConfirmDelete} onClose={setXConfirmDelete}>
+      <div className="flex flex-col w-full py-3">
+        <div className="relative">
+          <div className="text-center font-medium text-title-xsm">
+            Apakah Anda Yakin Hapus Data Pegawai ?
+          </div>
+          <div className="text-center font-medium md:text-xsm text-xsm2 mt-6 mb-4 text-danger">
+            Menghapus data pegawai dapat mengakibatkan data notulen yang dibuat
+            oleh {user.nama} akan hilang !
+          </div>
           {/* <div className='mt-5 mb-2 flex'>
             <div>
               <TextInput
@@ -53,7 +58,7 @@ const XDeleteConfirm = ({
               </p>
             </div>
           </div> */}
-          <div className='mt-[2em] flex justify-between'>
+          <div className="mt-[2em] flex justify-between">
             <div className="btn-cancel">
               <Button
                 variant="error"
@@ -84,8 +89,8 @@ const XDeleteConfirm = ({
           </div>
         </div>
       </div>
-    </CommonModal >
-  )
-}
+    </CommonModal>
+  );
+};
 
 export default XDeleteConfirm;

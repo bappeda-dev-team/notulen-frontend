@@ -22,7 +22,7 @@ const ArsipNotulenProps = () => {
     (state: State) => ({
       profile: state.profile.profile,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   useEffect(() => {
@@ -31,10 +31,13 @@ const ArsipNotulenProps = () => {
     if (month === null) {
       const currentDate = new Date();
       const currentShortMonth = currentDate.getMonth() + 1;
-      const currentMonth = month !== null ? month.toLocaleString("id-ID", { month: "long", }) : currentDate.toLocaleString("id-ID", { month: "long", });
+      const currentMonth =
+        month !== null
+          ? month.toLocaleString("id-ID", { month: "long" })
+          : currentDate.toLocaleString("id-ID", { month: "long" });
       const currentYear = currentDate.getFullYear();
 
-      setMonth({ month: currentShortMonth, year: currentYear })
+      setMonth({ month: currentShortMonth, year: currentYear });
     }
   }, [month]);
 
@@ -48,7 +51,7 @@ const ArsipNotulenProps = () => {
 
     if (!response.success) {
       if (response.code == 401) {
-        router.push('/unauthorized');
+        router.push("/unauthorized");
       } else {
         setLoading(false);
         Swal.fire({
@@ -68,15 +71,22 @@ const ArsipNotulenProps = () => {
             id_notulen: el.id,
             index: el.id,
             opd: el.Uuid.Perangkat_Daerah.nama_opd,
-            tagging: el.Uuid.Taggings.length !== 0 ? el.Uuid.Taggings.map((el: any) => el.nama_tagging) : "-",
-            tanggal: el.tanggal[0]?.startDate !== el.tanggal[0]?.endDate
-              ? getShortDate(el.tanggal[0]?.startDate) +
-              " - " +
-              getShortDate(el.tanggal[0]?.endDate)
-              : getShortDate(el.tanggal[0]?.startDate),
+            tagging:
+              el.Uuid.Taggings.length !== 0
+                ? el.Uuid.Taggings.map((el: any) => el.nama_tagging)
+                : "-",
+            tanggal:
+              el.tanggal[0]?.startDate !== el.tanggal[0]?.endDate
+                ? getShortDate(el.tanggal[0]?.startDate) +
+                  " - " +
+                  getShortDate(el.tanggal[0]?.endDate)
+                : getShortDate(el.tanggal[0]?.startDate),
             waktu: getTime(el.waktu) + " WIB",
             acara: el.acara,
-            sasaran: el.Uuid.Sasarans.length !== 0 ? el.Uuid.Sasarans.map((data: any) => data.sasaran) : "-",
+            sasaran:
+              el.Uuid.Sasarans.length !== 0
+                ? el.Uuid.Sasarans.map((data: any) => data.sasaran)
+                : "-",
             lokasi: el.lokasi,
             status: el.status,
             foto: el.link_img_foto !== null ? "V" : "X",
@@ -112,7 +122,11 @@ const ArsipNotulenProps = () => {
       {loading ? (
         <Loading loading={loading} setLoading={setLoading} />
       ) : (
-        <LaporanNotulenAuth data={notulens} profile={profile} fetchData={fetchData} />
+        <LaporanNotulenAuth
+          data={notulens}
+          profile={profile}
+          pathname={fetchData}
+        />
       )}
     </div>
   );

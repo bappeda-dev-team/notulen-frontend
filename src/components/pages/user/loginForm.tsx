@@ -1,15 +1,15 @@
-'use client';
+"use client";
 import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import TextInput from '@/components/common/text-input/input';
-import { Button } from '@/components/common/button/button';
-import Swal from 'sweetalert2'
+import TextInput from "@/components/common/text-input/input";
+import { Button } from "@/components/common/button/button";
+import Swal from "sweetalert2";
 import Image from "next/image";
 import { useAuth } from "@/components/providers/Auth";
 import Loading from "@/components/global/Loading/loading";
-import { withFormik, FormikProps, FormikBag } from 'formik';
-import * as Yup from 'yup';
+import { withFormik, FormikProps, FormikBag } from "formik";
+import * as Yup from "yup";
 import { setCookie, getCookie, getCookies } from "cookies-next";
 import { fetchApi } from "@/app/api/request";
 import { useDispatch } from "react-redux";
@@ -17,8 +17,8 @@ import { setProfile } from "@/store/profile/action";
 import { deleteCookie } from "cookies-next";
 
 interface FormValues {
-  nip: string,
-  password: string,
+  nip: string;
+  password: string;
 }
 
 interface OtherProps {
@@ -29,7 +29,7 @@ interface OtherProps {
 interface MyFormProps extends OtherProps {
   handleSubmit: (
     values: FormValues,
-    formikBag: FormikBag<object, FormValues>
+    formikBag: FormikBag<object, FormValues>,
   ) => void;
 }
 
@@ -44,7 +44,7 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
     isSubmitting,
     isValid,
     dirty,
-    ref
+    ref,
   } = props;
 
   return (
@@ -87,7 +87,14 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
         >
           <div className="text-Nunino text-sm text-white">
             {isSubmitting ? (
-              <div><Image src="/loading.gif" width={18} height={18} alt="Loading" /></div>
+              <div>
+                <Image
+                  src="/loading.gif"
+                  width={18}
+                  height={18}
+                  alt="Loading"
+                />
+              </div>
             ) : (
               <span>Masuk</span>
             )}
@@ -95,8 +102,8 @@ const FormField = (props: OtherProps & FormikProps<FormValues>) => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
 function CreateForm({ handleSubmit }: MyFormProps) {
   const FormWithFormik = withFormik({
@@ -105,16 +112,15 @@ function CreateForm({ handleSubmit }: MyFormProps) {
       password: "",
     }),
     validationSchema: Yup.object().shape({
-      nip: Yup.string()
-        .required('Bagian dibutuhkan'),
+      nip: Yup.string().required("Bagian dibutuhkan"),
       password: Yup.string()
         .required("Bagian dibutuhkan")
         .min(8, "Kata sandi terlalu pendek - minimal harus 8 karakter"),
     }),
-    handleSubmit
-  })(FormField)
+    handleSubmit,
+  })(FormField);
 
-  return <FormWithFormik />
+  return <FormWithFormik />;
 }
 
 const LoginForm: any = () => {
@@ -138,86 +144,87 @@ const LoginForm: any = () => {
       const resUser = await fetchApi({
         url: "/pegawai/getProfile",
         method: "get",
-        type: "auth"
-      })
+        type: "auth",
+      });
       if (!resUser.success) {
         deleteCookie("refreshSession");
       }
 
       if (resUser.success) {
-        const { data } = resUser.data
+        const { data } = resUser.data;
         const response = await fetchApi({
           url: `/pegawai/getPegawai/${data.nip}`,
           method: "get",
-          type: "auth"
-        })
+          type: "auth",
+        });
 
         if (response.success) {
           dispatch(setProfile(response.data.data));
-          router.push('/');
+          router.push("/");
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Gagal memuat data profil',
-          })
+            icon: "error",
+            title: "Oops...",
+            text: "Gagal memuat data profil",
+          });
         }
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'Koneksi bermasalah!',
-        })
+          icon: "error",
+          title: "Oops...",
+          text: "Koneksi bermasalah!",
+        });
       }
     } else {
-      router.push('/auth/login')
+      router.push("/auth/login");
     }
-  }
+  };
 
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
 
     const payload = {
       nip: values.nip,
-      password: values.password
-    }
+      password: values.password,
+    };
 
     const response = await fetchApi({
       url: "/pegawai/login",
       method: "post",
       type: "withoutAuth",
-      body: payload
-    })
+      body: payload,
+    });
 
     if (!response.success) {
-      router.push('/auth/login');
+      router.push("/auth/login");
       if (response.code == 404) {
         Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'NIP tidak ditemukan',
-        })
+          icon: "error",
+          title: "Oops...",
+          text: "NIP tidak ditemukan",
+        });
         setLoading(false);
       } else if (response.code == 400) {
         Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'Password salah!',
-        })
+          icon: "error",
+          title: "Oops...",
+          text: "Password salah!",
+        });
         setLoading(false);
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'Koneksi bermasalah',
-        })
+          icon: "error",
+          title: "Oops...",
+          text: "Koneksi bermasalah",
+        });
         setLoading(false);
       }
-      return false
+      return false;
     } else {
       setAuthenticated(true);
       setActive(true);
-      setCookie("refreshSession", response.data.data.access_token, {
+      let cookie = response.data.data.accessToken;
+      setCookie("refreshSession", cookie, {
         maxAge: 900000,
         path: "/",
         // secure: true
@@ -226,7 +233,7 @@ const LoginForm: any = () => {
       getProfile();
       return true;
     }
-  }
+  };
 
   return (
     <React.Fragment>
@@ -236,7 +243,7 @@ const LoginForm: any = () => {
         <CreateForm handleSubmit={handleSubmit} />
       )}
     </React.Fragment>
-  )
-}
+  );
+};
 
-export default LoginForm
+export default LoginForm;

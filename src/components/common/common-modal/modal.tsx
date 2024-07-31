@@ -3,13 +3,13 @@ import { FiAlertCircle } from "react-icons/fi";
 import { useState } from "react";
 
 type ModalInterface = {
-  isOpen: boolean,
-  onClose: any,
-  children: any,
-  className?: string,
+  isOpen: boolean;
+  onClose: any;
+  children: any;
+  className?: string;
   size?: string;
-  disableScrollLock?: any
-}
+  disableScrollLock?: any;
+};
 
 export const CommonModal = ({
   isOpen,
@@ -18,7 +18,6 @@ export const CommonModal = ({
   size,
   children,
 }: ModalInterface) => {
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -33,18 +32,16 @@ export const CommonModal = ({
             animate={{ scale: 1, rotate: "0deg" }}
             exit={{ scale: 0, rotate: "0deg" }}
             onClick={(e) => e.stopPropagation()}
-            className={`modal-content-wrapper ${size === undefined ? 'sm' : size}`}
+            className={`modal-content-wrapper ${size === undefined ? "sm" : size}`}
           >
             <FiAlertCircle className="text-white/10 rotate-12 text-[250px] absolute z-0 -top-24 -left-24" />
-            <div className="relative text-black">
-              {children}
-            </div>
+            <div className="relative text-black">{children}</div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
-  )
-}
+  );
+};
 // import { motion, AnimatePresence } from "framer-motion"
 // import { Dialog, Box } from '@mui/material';
 // import { TransitionProps } from '@mui/material/transitions';
